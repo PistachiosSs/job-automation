@@ -1,0 +1,82 @@
+% ============================================================================
+% MASTER COVER LETTER TEMPLATE — Sample Candidate
+% Purpose: Reusable, JD-tailorable base for job applications.
+% Works with pdfLaTeX / MacTeX / Overleaf without external assets.
+% This is a GENERAL letter, not a pre-tailored application.
+%
+% AUTOMATION RULES:
+% - Create a COPY per job. Never overwrite this master.
+% - Change the six macros in the JOB-SPECIFIC FIELDS block.
+% - Keep claims factual. Do not invent employers, tools, titles or credentials.
+% - Emphasize relevant evidence for each JD, but preserve core experience.
+% - Keep the completed application to one page where possible.
+% - Remove any generic phrasing in RoleMotivation/RoleContribution when tailoring.
+% ============================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,top=30mm,bottom=25mm,left=28mm,right=28mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{10pt}
+\linespread{1.08}
+\pagestyle{empty}
+\urlstyle{same}
+
+% ---- PERMANENT PERSONAL FIELDS ----------------------------------------------
+\newcommand{\ApplicantName}{Sample Candidate}
+\newcommand{\ApplicantLocation}{Bamberg, Germany}
+\newcommand{\ApplicantEmail}{sample@example.com}
+
+% ---- JOB-SPECIFIC FIELDS: THE APPLICATION TOOL MAY REPLACE THESE ------------
+\newcommand{\TargetPosition}{[POSITION TITLE]}
+\newcommand{\TargetCompany}{[COMPANY NAME]}
+\newcommand{\LetterDate}{\today}
+
+% Customize this paragraph using the company's actual work, mission and JD.
+\newcommand{\RoleMotivation}{%
+I am interested in this opportunity because it would allow me to apply my technical background to practical challenges, contribute to a collaborative team, and continue learning through real projects.%
+}
+
+% Customize this paragraph with 1–2 verified, JD-relevant skills or examples.
+\newcommand{\RoleContribution}{%
+I would bring a combination of practical implementation experience, an eye for usability and detail, and the willingness to take ownership of unfamiliar challenges.%
+}
+
+% Optional: e.g., I am available to start immediately for up to 20 hours per week.
+% Keep empty if the specific application does not ask for availability.
+\newcommand{\AvailabilitySentence}{}
+% ---------------------------------------------------------------------------
+
+\begin{document}
+
+{\fontsize{13}{15}\selectfont\textbf{\ApplicantName}}\\[4pt]
+\ApplicantLocation\\[4pt]
+\href{mailto:\ApplicantEmail}{\ApplicantEmail}\\[10pt]
+\LetterDate
+
+\vspace{8pt}
+Dear Hiring Team,
+
+I am applying for the \TargetPosition{} position at \TargetCompany{}. I am currently pursuing a Master's degree in International Software Systems Science at the University of Bamberg, building on a Bachelor's degree in Computer Science. My background combines software development, interactive technology, and 3D content creation. I am most motivated by work where I can understand a real problem and help turn an idea into a solution that people can use.
+
+As a student assistant at the Gamification Chair of the University of Bamberg, I contributed to the TRUST research project, which explored human interaction with AI-powered quality-inspection robots through virtual reality. I worked with Unity and Blender to prepare and optimize 3D assets, implement interactive features, and improve the user experience through testing and iteration. Working in a research environment taught me to adapt to changing requirements, tackle unfamiliar technical challenges, and collaborate with colleagues from different backgrounds.
+
+My experience extends beyond this project. I have worked with Blender for over four years on 3D content and visualization, and my earlier roles in DevOps and frontend development gave me exposure to software delivery and development workflows. These experiences have shaped how I approach a task: understand the objective, work within technical constraints, communicate clearly, and refine the result based on feedback. I value thoughtful design and reliable implementation equally.
+
+\RoleMotivation{} \RoleContribution{}
+
+I would welcome the opportunity to contribute to \TargetCompany{} while continuing to grow professionally. \AvailabilitySentence{} Thank you for considering my application. I would be pleased to discuss how my experience and interests could support your team.
+
+\vspace{8pt}
+Kind regards,\\[6pt]
+\textbf{\ApplicantName}
+
+\end{document}

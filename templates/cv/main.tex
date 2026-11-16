@@ -1,0 +1,161 @@
+% ==============================================================
+% Sample Candidate - CV (Informatics)
+% Content-only file. All formatting/layout lives in cv-format.sty
+% Compile with pdflatex (Overleaf: default pdflatex compiler).
+% Keep cv-format.sty and photo.jpg in the same project/folder.
+% ==============================================================
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{cv-format}
+
+
+\begin{document}
+
+% ==============================================================
+% HEADER
+% ==============================================================
+\noindent
+\begin{minipage}[c]{0.74\textwidth}
+  {\fontsize{26}{28}\selectfont\textbf{Sample Candidate}}\\[4pt]
+  {\Large\textit{\color{subtext}Master's Student in Informatics}}\\[8pt]
+  \iconcircle{\Letter}{0.9}\,\, \small sample@example.com
+  \hspace{14pt}
+  \iconcircle{\Telefon}{0.9}\,\, \small [PHONE]
+  \hspace{14pt}
+  \pinicon\,\, \small Bamberg, Bavaria\\[6pt]
+  % Profile URLs were not supplied; labels are intentionally unlinked.
+  \iconbadge{\footnotesize\textbf{in}}{0.9}\,\, \small LinkedIn
+  \hspace{10pt}
+  \iconbadge{\footnotesize\textbf{gh}}{0.9}\,\, \small GitHub
+  \hspace{10pt}
+  \iconbadge{\footnotesize\textbf{Be}}{0.9}\,\, \small Behance
+\end{minipage}%
+\hfill
+\begin{minipage}[c]{0.22\textwidth}
+  \raggedleft
+  \begin{tikzpicture}
+    \clip (0,0) circle (1.7cm);
+    \node at (0,0) {\includegraphics[width=3.6cm]{photo.jpg}};
+  \end{tikzpicture}
+\end{minipage}
+
+\vspace{4pt}
+
+% ==============================================================
+% SUMMARY
+% ==============================================================
+\sectiontitle{SUMMARY}
+
+\small
+I am a Computer Scientist specialising in 3D modeling and XR development, with proven experience in
+application oriented VR research and human machine interaction. I hold a Bachelor's Degree in Computer
+Science and an ongoing Master's Degree in Software Systems Science. I carry over 4 years of experience with
+Blender and over 1 year of experience with Unity engine, creating digital 3D environments, VR applications
+and reusable interaction workflows.
+
+% ==============================================================
+% PROFESSIONAL EXPERIENCE
+% ==============================================================
+\sectiontitle{PROFESSIONAL EXPERIENCE}
+
+\entrystart{09/2025 -- 06/2026}{Bamberg, Germany}
+\small\textbf{VR Application Development (Student Assistant),} \textit{Gamification Chair at Universitat Bamberg}
+\begin{itemize}
+  \small
+  \item Worked end to end as a VR Developer on the TRUST project, an application oriented VR research project as part of a PhD topic, investigating human machine interaction and investigating how gamification can build trust in AI Powered quality inspection robots.
+  \item Optimised and prepared the Robot CAD model and surrounding digital environment in Blender for real time visualization, ensuring performance friendly assets suitable for immersive VR evaluation
+  \item Built and iterated over the VR application using Unity, C\# and VR Builder as supporting VR developement tool, authoring modular, reusable interaction workflows.
+  \item Developed reusable VR interaction features using VIROO for perspective switching, teleportation, object interactions, and world space UI, supporting human machine interaction evaluation.
+  \item Supported the non technical research team in planning, documenting, and conducting field studies, coordinating participant data collection and documenting work results and study procedures according to scientific standards.
+\end{itemize}
+\entryend
+
+\entrystart{09/2022 -- 08/2024}{Islamabad, Pakistan}
+\small\textbf{3D Modelling - Blender,} \textit{Self Employed (Upwork)}
+\begin{itemize}
+  \small
+  \item Worked with Blender software for 3D modeling and digital asset creation throughout my Bachelor's studies as a freelance artist, alongside software development.
+  \item Created digital 3D models, environments, and game ready props. Gained solid experience with modelling, clean topology, UV unwrapping, texturing, materials, lighting, and rendering.
+  \item Developed spatial and technical understanding of how digital 3D environments are built, optimized, and transferred into Unity engine.
+\end{itemize}
+\entryend
+
+% ==============================================================
+% EDUCATION
+% ==============================================================
+\sectiontitle{EDUCATION}
+
+\entrystart{10/2024 -- Present}{Bamberg. Germany}
+\small\textbf{MASTERS IN INTERNATIONAL SOFTWARE SYSTEMS SCIENCE,} \textit{\small Otto-Friedrich Universität Bamberg}
+\begin{itemize}
+  \small
+  \item Master's Project TRUST: VR training application for human-robot trust building - (Grade 1.3)
+\end{itemize}
+\entryend
+
+\entrystart{09/2019 -- 09/2023}{Islamabad, Pakistan}
+\small\textbf{BACHELORS OF SCIENCE IN COMPUTER SCIENCE,} \textit{COMSATS University Islamabad}
+\entryend
+
+% ==============================================================
+% SKILLS
+% ==============================================================
+\newpage
+\sectiontitle{SKILLS}
+
+\small\textbf{Development Skills}
+\begin{itemize}
+  \small
+  \item Unity (scene setup, XR application development, UI, interaction concepts, application evaluation)
+  \item VRBuilder (visual scripting framework for reusable workflows and modular implementation)
+  \item Viroo (EU Specific cloud based VR framework for multiplayer VR applications)
+\end{itemize}
+
+\vspace{3pt}
+\small\textbf{Programming Languages}
+\begin{itemize}
+  \small
+  \item C\# (scripting for 3D-games and VR applications)
+  \item Python (scpriting in Blender)
+\end{itemize}
+
+\vspace{3pt}
+\small\textbf{Props and Visualisation Skills:} Blender (3D modelling, CAD model preparation, digital environment creation, topology refinement, UV unwrapping, texturing, materials, lighting, rendering)
+
+\vspace{3pt}
+\small\textbf{Systems and Version Control}
+\begin{itemize}
+  \small
+  \item Linux and Cloud
+  \item Git and GitHub
+\end{itemize}
+
+% ==============================================================
+% VOLUNTEER PARTICIPATIONS
+% ==============================================================
+\sectiontitle{VOLUNTEER PARTICIPATIONS}
+
+\small\textbf{Munich GGBavaria,} \textit{2026}
+\begin{itemize}
+  \small
+  \item Participated in GGBavaria-2026 event together with the Gamification Team at University of Bamberg to present our research work.
+  \item Played, tested and gave feedback on different Games developed by game developers and artists around Bavaria.
+\end{itemize}
+
+\vspace{2pt}
+\small\textbf{Islamabad PGDC23,} \textit{2023}
+\begin{itemize}
+  \small
+  \item Participated in the Pakistan Game Developers Conference, where I developed and tested a working prototype of our concept game together with my team member within 3 days.
+  \item Worked on the props building and game assets and delivered them seamlessly into Unity using gitHub.
+\end{itemize}
+
+\vspace{2pt}
+\sectiontitle{LANGUAGES}
+\small
+\begin{itemize}
+  \item English: Fluent
+  \item Deutsch: A2 (Actively Learning)
+  \item Urdu: Native
+\end{itemize}
+
+\end{document}

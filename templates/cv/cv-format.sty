@@ -1,0 +1,104 @@
+% ==============================================================
+% cv-format.sty
+% All formatting, colors, packages, and layout commands for the
+% Sample Candidate CV. The main.tex file only contains content and
+% loads this package for styling.
+% ==============================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cv-format}[2026/07/08 CV formatting package]
+
+% ---------- Packages ----------
+\RequirePackage[left=1.1cm,right=1.1cm,top=1.3cm,bottom=1.3cm]{geometry}
+\RequirePackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{xcolor}
+\RequirePackage{tikz}
+\RequirePackage{enumitem}
+\RequirePackage{tabularx}
+\RequirePackage{marvosym}      % \Letter (email), \Telefon (phone)
+\RequirePackage{hyperref}
+\RequirePackage{graphicx}
+\RequirePackage{parskip}
+\RequirePackage{titlesec}
+
+% ---------- Colors ----------
+\definecolor{barbg}{RGB}{225,226,236}      % section header bar background
+\definecolor{accent}{RGB}{47,92,148}       % blue used for dates / icons / links
+\definecolor{darktext}{RGB}{30,30,30}
+\definecolor{subtext}{RGB}{70,70,70}
+
+\hypersetup{colorlinks=true, urlcolor=accent, linkcolor=accent}
+
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+
+% ---------- Slightly larger body text ----------
+% The CV body copy uses \small throughout; this single line controls
+% the size of ALL body text (first number) and the line spacing within
+% paragraphs/bullets (second number, i.e. leading). Adjust here only.
+\renewcommand{\small}{\fontsize{10.3pt}{12.5pt}\selectfont}
+
+% ---------- Global paragraph spacing ----------
+% Extra vertical space between paragraphs (works with the parskip package).
+\setlength{\parskip}{2pt}
+
+% ---------- Global bullet-list spacing ----------
+% Applies to every \begin{itemize} in main.tex, so individual lists no
+% longer need their own [leftmargin=...] options.
+%   leftmargin = indent of the bullet list
+%   itemsep    = space BETWEEN bullet points
+%   topsep     = space BEFORE the first bullet / AFTER the list
+\setlist[itemize]{leftmargin=12pt,itemsep=1pt,topsep=2pt}
+
+% ---------- Section title bar (full width, centered bold text) ----------
+\newcommand{\sectiontitle}[1]{%
+  \vspace{6pt}
+  \noindent\colorbox{barbg}{\parbox{\dimexpr\textwidth-2\fboxsep}{\centering
+  \textbf{\color{darktext} #1}\vspace{2pt}}}
+  \vspace{-2pt}
+}
+
+% ---------- Two-column entry: left = dates/location, right = content ----------
+\newcommand{\entryleftwidth}{0.205\textwidth}
+\newcommand{\entryrightwidth}{0.775\textwidth}
+
+\newcommand{\entrystart}[2]{%
+  \noindent
+  \begin{minipage}[t]{\entryleftwidth}
+    \strut\color{accent}\small #1\\[1pt]
+    \color{accent}\small #2
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[t]{\entryrightwidth}
+    \strut
+}
+\newcommand{\entryend}{\end{minipage}\par\vspace{4pt}}
+
+% ---------- Small circular icon badge (for contact row) ----------
+\newcommand{\iconcircle}[2]{%
+  \begin{tikzpicture}[baseline=-0.6ex]
+    \draw[accent, line width=1pt] (0,0) circle (0.21cm);
+    \node[scale=#2, color=accent] at (0,0) {#1};
+  \end{tikzpicture}%
+}
+
+\newcommand{\iconbadge}[2]{%
+  \begin{tikzpicture}[baseline=-0.6ex]
+    \draw[accent, line width=1pt, rounded corners=1pt] (-0.22cm,-0.19cm) rectangle (0.22cm,0.19cm);
+    \node[scale=#2, color=accent] at (0,0) {#1};
+  \end{tikzpicture}%
+}
+
+% location pin glyph, placed inside the same circular badge as \iconcircle
+\newcommand{\pinglyph}{%
+  \begin{tikzpicture}[scale=0.055]
+    \draw[accent, line width=1.6pt, fill=accent] (0,0.9) circle (0.8) -- cycle;
+    \draw[accent, line width=1.6pt] (-0.5,0.35) -- (0,-1.1) -- (0.5,0.35);
+    \fill[white] (0,0.9) circle (0.32);
+  \end{tikzpicture}%
+}
+\newcommand{\pinicon}{\iconcircle{\pinglyph}{0.9}}
+
+\endinput

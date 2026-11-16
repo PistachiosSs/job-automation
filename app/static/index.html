@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Job Apply — Application Studio</title><meta name="job-apply-token" content="{{CSRF_TOKEN}}" />
+<link rel="stylesheet" href="/style.css" /></head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-icon">ja</div><div><strong>Job Apply</strong><span>Application studio</span></div></div>
+    <div class="side-label">WORKSPACE</div>
+    <button type="button" class="nav active" data-section="new"><span class="nav-ico">＋</span> New application</button>
+    <button type="button" class="nav" data-section="documents"><span class="nav-ico">▤</span> Document studio</button>
+    <button type="button" class="nav" data-section="tracker"><span class="nav-ico">▦</span> Application tracker</button>
+    <div class="side-label second">CONFIGURATION</div>
+    <button type="button" class="nav" data-section="templates"><span class="nav-ico">⌁</span> Templates & prompts</button>
+    <div class="side-spacer"></div>
+    <div class="integration"><span class="dot amber"></span><div><strong>ChatGPT handoff</strong><span>Manual copy / paste (v0.1)</span></div></div>
+    <div class="integration"><span class="dot amber"></span><div><strong>Google Sheets</strong><span>CSV export available</span></div></div>
+    <div class="side-foot">Local macOS edition • v0.1</div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div class="breadcrumb">WORKSPACE <span>/</span> <span id="active-location">New application</span></div><div class="topright"><span class="running"><i></i> Local & private</span><a class="chatgpt-link" target="_blank" rel="noopener noreferrer" href="https://chatgpt.com/">Open ChatGPT ↗</a></div></header>
+    <div class="content">
+      <div id="toast" role="status" aria-live="polite"></div>
+      <section class="page active" id="page-new">
+        <div class="eyebrow">01 / BEGIN</div><h1>Make each application count.</h1>
+        <p class="subheading">Start with a job description. Keep your original LaTeX design, tailor with ChatGPT, and review every change before exporting.</p>
+        <div class="alert" id="setup-alert"></div>
+        <div class="section-label"><span>APPLICATION DETAILS</span><span>Step 1 of 3</span></div>
+        <form id="new-form" class="form-card">
+          <label for="job-description">Job description <span class="req">*</span></label>
+          <textarea id="job-description" name="job_description" class="big-input" placeholder="Paste the complete job description here, including qualifications, responsibilities, and requirements..." required></textarea>
+          <div class="row2">
+            <div><label for="company">Company name</label><input id="company" name="company" placeholder="e.g. Example GmbH" /></div>
+            <div><label for="job-title">Exact job title</label><input id="job-title" name="job_title" placeholder="e.g. Working Student Data Science" /></div>
+          </div>
+          <div class="row2">
+            <div><label for="job-url">Job posting URL</label><input id="job-url" name="job_url" type="url" placeholder="https://example.com/careers/position" /></div>
+            <div><label for="location">Location</label><input id="location" name="location" placeholder="e.g. Munich, Germany" /></div>
+          </div>
+          <div class="row3">
+            <div><label for="category">Position category</label><select id="category" name="category"><option>Data Science</option><option>Data Analyst</option><option>Business Intelligence</option><option>Machine Learning</option><option>Unity Developer</option><option>AR/VR Developer</option><option>3D Artist</option><option>Software Developer</option><option>Other</option></select></div>
+            <div><label for="role-type">Application type</label><select id="role-type" name="role_type"><option value="Werkstudent">Werkstudent</option><option value="Praktikum">Praktikum</option><option value="Thesis">Thesis</option><option value="Full-time">Full-time</option><option value="Other">Other</option></select></div>
+            <div><label for="availability">Weekly availability</label><input id="availability" name="availability" placeholder="e.g. 20 hours/week" /></div>
+          </div>
+          <div class="row2">
+            <div><label for="start-date">Start date</label><input id="start-date" name="start_date" placeholder="e.g. Immediately / 01.12.2026" /></div>
+            <div><label for="notes">Notes (optional)</label><input id="notes" name="notes" placeholder="Recruiter, deadline, referral..." /></div>
+          </div>
+          <label class="group-label">Documents to prepare</label>
+          <div class="choices"><label class="choice"><input type="checkbox" name="include_cv" checked/><span>Tailored CV<small>Preserve original LaTeX design</small></span></label><label class="choice"><input type="checkbox" name="include_cover"/><span>Cover letter<small>Requires your cover letter template</small></span></label></div>
+          <div class="form-actions"><div class="hint">No CV content will be modified automatically.</div><button type="submit" class="primary">Create application <span>→</span></button></div>
+        </form>
+      </section>
+      <section class="page" id="page-documents">
+        <div class="eyebrow">02 / CREATE & REVIEW</div><h1>Document studio.</h1>
+        <p class="subheading">Make a copy of your template for every application. Use ChatGPT for editing, then compile, inspect and approve here.</p>
+        <div class="select-bar"><label for="app-selector">CURRENT APPLICATION</label><select id="app-selector"><option value="">Select an application</option></select><span id="app-status" class="status-pill">No application selected</span></div>
+        <div id="doc-empty" class="empty-state"><div class="empty-mark">▤</div><h2>No application selected</h2><p>Create a new application or select an existing one above.</p><button type="button" class="secondary" data-section="new">Create application</button></div>
+        <div id="doc-panel" class="hidden">
+          <div class="tabs"><button type="button" data-kind="cv" class="tab active">Curriculum vitae <span id="cv-badge" class="tiny">Draft</span></button><button type="button" data-kind="cover-letter" class="tab">Cover letter <span id="cover-badge" class="tiny">Not requested</span></button></div>
+          <div class="doc-grid">
+            <div class="editor-area">
+              <div class="editor-title"><strong id="editor-heading">CV source — main.tex</strong><span class="tag">LaTeX</span></div>
+              <p class="editor-desc">Generate a prompt for ChatGPT, paste its complete <code>main.tex</code> response into the editor, and compile the PDF locally.</p>
+              <div class="editor-tools"><button type="button" class="secondary" id="generate-prompt">Prepare ChatGPT prompt ↗</button><button type="button" class="secondary" id="save-source">Save source</button><button type="button" class="secondary" id="review-diff">Review changes</button></div>
+              <textarea id="tex-editor" class="code-input" spellcheck="false" placeholder="Your complete main.tex source will appear here. Upload a template under Templates & prompts if empty."></textarea>
+              <div class="editor-bottom"><span id="dirty-indicator">Source loaded from template</span><button type="button" class="primary" id="compile-button">Compile PDF</button></div>
+            </div>
+            <div class="preview-area">
+              <div class="preview-header"><strong>PDF preview</strong><span id="compile-badge" class="tag">Not compiled</span></div>
+              <div class="preview-frame"><div id="preview-fallback" class="preview-placeholder"><div class="empty-mark">□</div><strong>Awaiting compiled PDF</strong><p>Your original LaTeX layout appears here after compilation.</p></div><iframe title="Compiled PDF preview" id="pdf-frame" class="hidden"></iframe></div>
+              <div id="compile-errors" class="error-box hidden"></div>
+              <div class="preview-actions"><button type="button" class="secondary" id="download-pdf">Download PDF</button><button type="button" class="secondary" id="download-tex">Download .tex</button><button type="button" class="primary" id="approve-document">Approve document ✓</button></div>
+            </div>
+          </div>
+          <div class="finish-bar"><div><strong>Application readiness</strong><p id="readiness-text">Approve each requested document to continue.</p></div><button type="button" class="primary" id="mark-prepared">Mark as Prepared →</button></div>
+        </div>
+      </section>
+      <section class="page" id="page-tracker">
+        <div class="eyebrow">03 / TRACK</div><h1>Stay on top of every application.</h1>
+        <p class="subheading">Prepared and Applied are two distinct milestones. Your local CSV is ready for import into a new Google Sheet when the connector is configured.</p>
+        <div class="tracker-actions"><span id="tracker-count">0 applications</span><a href="/api/tracker.csv" class="secondary link-button">Export Google Sheets CSV ↓</a></div>
+        <div class="table-wrapper"><table><thead><tr><th>Company</th><th>Job title</th><th>Category</th><th>Created</th><th>Status</th><th>Action</th></tr></thead><tbody id="tracker-rows"><tr><td colspan="6" class="muted">No applications yet.</td></tr></tbody></table></div>
+        <div class="tracker-note">Google Sheets is <strong>not connected</strong> in this build. The CSV is the source for initial sheet creation; remote synchronization will be added only after authorization.</div>
+      </section>
+      <section class="page" id="page-templates">
+        <div class="eyebrow">SETUP / CONTROL</div><h1>Your templates, your style.</h1>
+        <p class="subheading">Keep master assets unchanged. Each job gets its own independent working copy.</p>
+        <div class="template-grid">
+          <div class="template-card"><div class="card-head"><div><strong>Master CV template</strong><p>LaTeX source + all dependencies</p></div><span id="cv-health" class="status-pill">Checking…</span></div><input type="file" id="cv-files" multiple accept=".tex,.sty,.cls,.jpg,.jpeg,.png,.pdf,.zip"/><button type="button" class="secondary upload" id="upload-cv">Import CV file(s)</button><div class="card-hint" id="cv-hint">Provided: main.tex and cv-format.sty</div></div>
+          <div class="template-card"><div class="card-head"><div><strong>Cover letter template</strong><p>Export original LaTeX project as ZIP</p></div><span id="cover-health" class="status-pill">Checking…</span></div><input type="file" id="cover-files" multiple accept=".tex,.sty,.cls,.jpg,.jpeg,.png,.pdf,.zip"/><button type="button" class="secondary upload" id="upload-cover">Import cover letter file(s)</button><div class="card-hint" id="cover-hint">Pending: cover letter LaTeX source</div></div>
+        </div>
+        <div class="prompt-card"><div class="card-head"><div><strong>Tailoring instructions</strong><p>Saved separately for each document type.</p></div><select id="prompt-kind"><option value="cv">CV prompt</option><option value="cover-letter">Cover letter prompt</option></select></div><textarea id="prompt-editor" class="prompt-input" spellcheck="false"></textarea><div class="form-actions"><span class="hint">Prompts are stored locally on your Mac.</span><button type="button" class="primary" id="save-prompt">Save prompt</button></div></div>
+        <div class="notice">Important: the uploaded CV contains the name <strong>Sample Candidate</strong>. Verify that this is the correct master template before generating a real application. The original also references <code>photo.jpg</code>, which is not yet present.</div>
+      </section>
+    </div>
+  </main>
+</div>
+<div id="diff-modal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="diff-title"><div class="modal"><div class="modal-head"><div><div class="eyebrow">CHANGE REVIEW</div><h2 id="diff-title">Changes from the master template</h2></div><button type="button" class="icon-button" id="close-diff" aria-label="Close comparison">✕</button></div><p>Lines beginning with <strong>−</strong> were removed and lines beginning with <strong>+</strong> were added. Template styling files are not edited by this tool.</p><textarea id="diff-output" readonly spellcheck="false"></textarea><div class="modal-actions"><button type="button" class="primary" id="dismiss-diff">Back to editor</button></div></div></div>
+<div id="prompt-modal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal"><div class="modal-head"><div><div class="eyebrow">CHATGPT HANDOFF</div><h2 id="modal-title">Your document editing prompt</h2></div><button type="button" class="icon-button" id="close-modal" aria-label="Close dialog">✕</button></div><p>This draft contains the job description, your saved tailoring rules and the working LaTeX source. Copy it into ChatGPT, then paste the complete returned <code>main.tex</code> back into the editor.</p><textarea id="prompt-output" spellcheck="false"></textarea><div class="modal-actions"><button type="button" class="secondary" id="copy-prompt">Copy prompt</button><a href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank" class="primary link-button">Open ChatGPT ↗</a></div></div></div>
+<script src="/app.js"></script>
+</body></html>

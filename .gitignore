@@ -1,0 +1,35 @@
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+*credentials*.json
+*token*.json
+*.pem
+*.key
+
+# Local application data
+applications/
+tracker/
+private/
+output/
+generated/
+
+# Python and environment
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# macOS
+.DS_Store
+__MACOSX/
+._*
+
+# LaTeX outputs
+*.aux
+*.log
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.pdf
