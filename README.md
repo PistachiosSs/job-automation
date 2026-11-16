@@ -1,69 +1,124 @@
-# Job Apply — Local Application Studio (macOS, v0.1)
+# Job Apply — Local Application Studio (v0.2)
 
-**Working local MVP:** A browser application that stores per-job copies of LaTeX templates, prepares a complete ChatGPT handoff prompt, supports editing and previewing LaTeX/PDF, requires independent document approvals, and maintains a local Prepared / Applied tracker.
+A small, local-only web app that turns one master LaTeX CV / cover letter into a tailored,
+reviewed, tracked application per job. Runs on **Windows, macOS and Linux** with nothing but
+Python 3 and a LaTeX distribution. No accounts, no API keys, nothing leaves your computer
+unless you copy a prompt into ChatGPT yourself.
 
-**Not yet implemented:** automatic launch from the ChatGPT conversation, an AI connection inside the web app, direct Google Sheets write access, . Those features depend on an authorized, supported connector or further configuration. This package **does not use your ChatGPT subscription as an API key**.
+What it does:
 
-## Included in this public repository
+- Keeps your master templates untouched and makes a **copy per application**.
+- Stamps **your profile** (name, contact, links, photo) and the **job fields** (company, title,
+  availability) into that copy automatically.
+- Builds a complete **ChatGPT handoff prompt** (your rules + job description + current `main.tex`).
+- Lets you paste the result back, **compile the PDF locally**, diff it against the master,
+  approve each document, and mark the application *Prepared* and later *Applied*.
+- Maintains `tracker/applications.csv` for import into a spreadsheet.
 
-- `app/` — local Python HTTP server and browser interface.
-- `templates/cv/` — LaTeX CV template, formatting style, and **generic placeholder photo**.
-- `templates/cover-letter/cover_letter_master.tex` — reusable cover-letter LaTeX template.
-- `prompts/` — editable CV and cover-letter prompt files.
-- `tests/` — smoke and template detection tests.
-- `start.sh` and `start.command` — local launchers for Unix/macOS.
+Not included (by design, see [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)): direct AI calls, Google Sheets sync.
 
-Personal contact information and the user's original photograph have been replaced with public-safe placeholders. Replace them locally with your own details before applying for jobs. Never commit application history, `.env` files, API credentials, or private CVs.
+## Quick start
 
-## Launch on a Mac
+### 1. Install the two prerequisites
 
-1. Unzip the package on your Desktop so the folder is `~/Desktop/Job-Apply`.
-2. Install **Python 3** if you do not already have it. The web server uses only Python standard-library modules; there is **no pip install**.
-3. Install **MacTeX or BasicTeX** if you want PDF compilation. Confirm `pdflatex --version` works in Terminal.
-4. Open `start.command` from Finder, or use Terminal:
+| | Windows | macOS | Linux |
+|---|---|---|---|
+| Python 3.8+ | [python.org](https://www.python.org/downloads/) or `winget install Python.Python.3.13` | preinstalled / `brew install python` | `sudo apt install python3` |
+| pdflatex | [MiKTeX](https://miktex.org/download) (`winget install MiKTeX.MiKTeX`) or TeX Live | [BasicTeX / MacTeX](https://tug.org/mactex/) | `sudo apt install texlive-latex-extra texlive-fonts-recommended` |
+
+No `pip install` is needed — the app uses only the Python standard library.
+
+> MiKTeX tip: run `initexmf --set-config-value "[MPM]AutoInstall=1"` once so missing LaTeX
+> packages are installed automatically instead of showing a dialog during the first compile.
+
+### 2. Get the code and run setup
 
 ```bash
-cd ~/Desktop/Job-Apply
-chmod +x start.command
-./start.command
+git clone https://github.com/PistachiosSs/job-automation.git
+cd job-automation
+python setup.py          # guided wizard: your name, contact, links, defaults, port
 ```
 
-5. The browser should open **http://127.0.0.1:8765**. Keep the Terminal window running while you use the app. Press `Ctrl+C` to stop.
+`setup.py` checks Python and pdflatex, then writes **`config.json`** (git-ignored). Run
+`python setup.py --check` any time to see the environment diagnostics, or
+`python setup.py --yes` to create a config from `config.example.json` without prompts.
 
-This service binds only to `127.0.0.1` and does not upload CVs or documents on its own. **Copying the handoff prompt into ChatGPT explicitly sends its included job/CV content to ChatGPT.** Only import LaTeX files you trust; TeX is a programmable document format.
+### 3. Start the app
 
-## Use the app
+| Windows | macOS | Linux / any shell |
+|---|---|---|
+| double-click `start.bat` or run `.\start.ps1` | double-click `start.command` | `./start.sh` |
 
-1. Open **Templates & prompts**. Replace the bundled placeholder `photo.jpg` in CV assets with your own image, if desired. You can replace the bundled example cover-letter template and edit its prompt to suit your workflow.
-2. Open **New application**. Paste the job description, enter the actual company/title/link and your real availability, and select CV, cover letter, or both.
-3. The app creates `applications/<date>-<company>-<id>/` with separate editable working copies. The master remains unchanged.
-4. Open **Document studio**, choose CV or cover letter, and click **Prepare ChatGPT prompt**. Copy it to ChatGPT and follow your prompt rules. When ChatGPT returns a full `main.tex`, paste it into the editor. The current CV prompt requests the job description before any tailoring; it also requires explicit approval for special fourth-bullet changes.
-5. Click **Save source**, **Compile PDF**, and **Review changes**. Inspect the actual PDF in the right pane. **Approve** when ready. PDF download is enabled after approval.
-6. After all selected documents are approved, select **Mark as Prepared**. This records a preparation timestamp but **does not claim an application was submitted**.
-7. After submitting the application yourself, open **Application tracker** and click **Mark Applied**. Download the CSV to import into a Google Sheet.
+All launchers run the setup wizard automatically if `config.json` is missing, then open
+**http://127.0.0.1:8765**. Keep the window open while you use the app; `Ctrl+C` stops it.
+Options: `--port 8766`, `--no-browser` (also settable in `config.json`).
+
+## Using the app
+
+1. **Profile & settings** — enter your details once. They are stamped into every new
+   application copy; the master templates stay generic. Point *CV photo path* at a JPEG of
+   yourself (or leave empty to keep the placeholder).
+2. **Templates & prompts** — import your own LaTeX CV / cover letter (files or an Overleaf ZIP)
+   or keep the bundled ones. Edit the tailoring instructions sent to ChatGPT.
+3. **New application** — paste the job description, company and title (defaults for
+   availability, start date and role type come from your profile), choose CV / cover letter.
+4. **Document studio** — *Prepare ChatGPT prompt* → copy into ChatGPT → paste the returned
+   `main.tex` back → *Save source* → *Compile PDF* → *Review changes* → *Approve*.
+   The PDF download unlocks after approval.
+5. *Mark as Prepared* once every requested document is approved. After you submit the
+   application yourself, open **Application tracker** and *Mark Applied*. Export the CSV from there.
+
+### Using your own templates
+
+The app fills these macros if they exist in a template, and leaves everything else alone:
+
+```latex
+\newcommand{\ApplicantName}{...}      \newcommand{\ApplicantHeadline}{...}
+\newcommand{\ApplicantEmail}{...}     \newcommand{\ApplicantPhone}{...}
+\newcommand{\ApplicantLocation}{...}  \newcommand{\ApplicantLinkedIn}{...}
+\newcommand{\ApplicantGitHub}{...}    \newcommand{\ApplicantPortfolio}{...}
+% cover letters additionally:
+\newcommand{\TargetCompany}{...}  \newcommand{\TargetPosition}{...}  \newcommand{\AvailabilitySentence}{...}
+```
+
+Add the block to your own `main.tex` (see [templates/cv/main.tex](templates/cv/main.tex) for the
+`\applink{url}{label}` helper that shows a plain label when a URL is empty) and the profile
+feature works for it too. Templates without the macros still work — nothing is stamped.
 
 ## Files and data
 
-- `templates/cv/` — immutable master CV *during application creation*; you can update its files from Templates & prompts.
-- `templates/cover-letter/` — included master cover-letter project, replaceable from the portal.
-- `prompts/` — separate editable plain-text instructions for CV and cover letter.
-- `applications/<id>/cv/` and `applications/<id>/cover-letter/` — per-application `.tex`, auxiliary files and generated PDFs.
-- `applications/<id>/manifest.json` — metadata including status, current job description and document approvals.
-- `tracker/applications.csv` — automatically updated, UTF-8 CSV suitable for import into a new Google Sheet; remote Google Sheets synchronization is **not** connected yet.
-- `.agents/skills/job-apply/SKILL.md` — draft agent skill contract for compatible local agents. This is **not** an installed ChatGPT `@job-apply` command.
+| Path | Purpose | In git? |
+|---|---|---|
+| `config.json` | your profile, defaults, port, pdflatex path | no |
+| `config.example.json` | template for `config.json` | yes |
+| `templates/cv/`, `templates/cover-letter/` | master LaTeX projects (generic placeholders) | yes |
+| `prompts/*.md` | tailoring instructions for ChatGPT | yes |
+| `applications/<date>-<company>-<id>/` | per-application copies, manifest, PDFs | no |
+| `tracker/applications.csv` | spreadsheet-ready tracker | no |
 
-## Limitations
+If you import your real CV into `templates/`, remember it is tracked by git — keep the
+repository private or add the file to `.gitignore` before committing.
 
-- **ChatGPT launch:** a browser chat page cannot automatically start an arbitrary Desktop program. Start the local launcher first; a future custom ChatGPT app/MCP connector could expose supported actions with secure authorization.
-- **ChatGPT AI:** there is no direct usage of the ChatGPT subscription from this localhost app. Tailoring is a deliberate copy/paste handoff, not one-click AI generation.
-- **Google Sheets:** local CSV tracking works now; authenticating to Google and creating/updating a Sheet requires a later integration step.
-- **LaTeX formatting:** layout commands are never automatically rewritten by this app, but AI-generated changes can still cause overflow or page-count changes. Inspect the compiled PDF.
-- **Cover letter:** a generic master is included; tailor the content and prompt before sending applications.
-- **CV template:** the included sample is for demonstration. Update the personal details and professional claims before use.
+## Tests
 
-## Mac diagnostics
+```bash
+python -m unittest discover -s tests -p "*_test.py" -v   # unit tests (config, stamping, API, setup)
+python tests/smoke_test.py                                # end-to-end: starts the server, compiles real PDFs when pdflatex exists
+```
 
-- If the Terminal says `pdflatex is not installed`, install MacTeX or BasicTeX and restart the Terminal. Check `/Library/TeX/texbin/pdflatex` if your PATH doesn't include it.
-- If a compile fails, the app displays concise LaTeX errors. Missing images are detected in advance.
-- If port 8765 is busy, close the old Job Apply process or run `python3 app/server.py --port 8766` and visit `http://127.0.0.1:8766`.
-- To preserve all work, back up the entire `Job-Apply` folder. Do not discard `applications/` or `tracker/` when upgrading.
+## Troubleshooting
+
+- **"pdflatex is not installed"** — install a LaTeX distribution (table above) and restart; or
+  set `server.pdflatex` in `config.json` / the Profile page to the full path of `pdflatex`.
+- **First compile is slow or times out** — MiKTeX / TeX Live may be installing packages.
+  Raise `server.compile_timeout` (seconds) and retry.
+- **Compile error** — the app shows the relevant LaTeX lines. Missing images are reported
+  before compilation starts.
+- **Port already in use** — run `python app/server.py --port 8766` or change the port on the Profile page.
+- **Browser cannot connect** — the server binds to `127.0.0.1` only; use that address, not a LAN IP.
+
+## Security notes
+
+The server listens on localhost only, requires a per-session token for every write, blocks
+cross-origin requests, compiles with `-no-shell-escape` and never uploads anything. TeX is a
+programmable format: only import templates you trust.

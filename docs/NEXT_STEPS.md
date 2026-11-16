@@ -2,7 +2,9 @@
 
 ## Ready now (verified)
 
-- Local macOS-compatible HTTP app (Python standard library)
+- Cross-platform local HTTP app (Python standard library) with Windows/macOS/Linux launchers
+- `config.json` profile + `setup.py` wizard + Profile page; details stamped into each application copy
+- pdflatex auto-discovery (MiKTeX, TeX Live, MacTeX) with configurable path and timeout
 - Import of `.tex`, `.sty`, `.cls`, `.jpg`, `.png` and template ZIPs
 - Copy-on-create versions for each company and job
 - Prompt construction for ChatGPT (manual handoff)

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Job Apply: local-only browser app. No OpenAI API key or cloud AI calls.
 
-Launch: python3 app/server.py
+Launch: python app/server.py   (Windows, macOS and Linux)
 Uses stdlib only; pdflatex must be installed to compile PDFs.
+Personal settings live in config.json (see config.example.json / setup.py).
 """
 import argparse
 import base64
@@ -25,6 +26,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import config as cfgmod  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = Path(__file__).resolve().parent / 'static'
 TEMPLATES = ROOT / 'templates'
@@ -34,8 +38,20 @@ TRACKER = ROOT / 'tracker' / 'applications.csv'
 FIELDS = ['id','company','job_title','category','role_type','location','job_url','created_at',
           'prepared_at','applied_at','status','cv_status','cover_letter_status','cv_pdf','cover_letter_pdf','notes']
 MAX_BODY = 25 * 1024 * 1024
-PORT = 8765
+CONFIG = cfgmod.load_config()
+PORT = CONFIG['server']['port']
+VERSION = '0.2'
 CSRF_TOKEN = secrets.token_urlsafe(24)
+
+
+def reload_config():
+    global CONFIG
+    CONFIG = cfgmod.load_config()
+    return CONFIG
+
+
+def pdflatex_path():
+    return cfgmod.find_pdflatex(CONFIG['server'].get('pdflatex', ''))
 
 
 def now():
@@ -114,6 +130,34 @@ def copy_template(kind, target):
     return True
 
 
+def personalise_copy(kind, target, entry):
+    """Stamp profile + job fields into a working copy. Masters are never touched."""
+    main = target / 'main.tex'
+    if not main.is_file():
+        return
+    tex = main.read_text(encoding='utf-8')
+    stamped = cfgmod.stamp_personal_fields(tex, CONFIG['profile'])
+    if kind == 'cover-letter':
+        stamped = cfgmod.stamp_job_fields(stamped, entry)
+    if stamped != tex:
+        main.write_text(stamped, encoding='utf-8')
+    photo = CONFIG['profile'].get('photo', '')
+    if kind == 'cv' and photo:
+        src = Path(photo).expanduser()
+        if not src.is_absolute():
+            src = ROOT / src
+        if src.is_file():
+            shutil.copy2(src, target / 'photo.jpg')
+
+
+def master_source_text(kind):
+    """The master as it would look once personalised; used for honest diffs."""
+    source = template_source(kind)
+    if source is None:
+        return None
+    return cfgmod.stamp_personal_fields(source.read_text(encoding='utf-8'), CONFIG['profile'])
+
+
 def create_application(p):
     jd = str(p.get('job_description','')).strip()
     if not jd: raise ValueError('Paste a job description first')
@@ -124,16 +168,18 @@ def create_application(p):
     if not any(requested.values()): raise ValueError('Select at least one document')
     loc = APPLICATIONS / app_id
     loc.mkdir(parents=True)
-    documents = {}
-    for kind in ('cv','cover-letter'):
-        copied = copy_template(kind, loc / kind) if requested[kind] else False
-        documents[kind] = {'requested': requested[kind], 'status': ('draft' if copied else 'missing_template') if requested[kind] else 'not_requested', 'approved_at': ''}
+    defaults = CONFIG['defaults']
     entry = {'id':app_id,'created_at':now(),'company':company,'job_title':job_title,
-             'category':str(p.get('category','other'))[:60], 'role_type':str(p.get('role_type',''))[:60],
-             'availability':str(p.get('availability',''))[:140], 'start_date':str(p.get('start_date',''))[:80],
+             'category':str(p.get('category') or defaults['category'])[:60], 'role_type':str(p.get('role_type') or defaults['role_type'])[:60],
+             'availability':str(p.get('availability') or defaults['availability'])[:140], 'start_date':str(p.get('start_date') or defaults['start_date'])[:80],
              'job_url':str(p.get('job_url',''))[:1500], 'location':str(p.get('location',''))[:160],
              'job_description':jd[:60000], 'notes':str(p.get('notes',''))[:3000],
-             'documents':documents,'prepared_at':'','applied_at':'','status':'Draft'}
+             'documents':{},'prepared_at':'','applied_at':'','status':'Draft'}
+    for kind in ('cv','cover-letter'):
+        copied = copy_template(kind, loc / kind) if requested[kind] else False
+        if copied:
+            personalise_copy(kind, loc / kind, entry)
+        entry['documents'][kind] = {'requested': requested[kind], 'status': ('draft' if copied else 'missing_template') if requested[kind] else 'not_requested', 'approved_at': ''}
     write_manifest(entry)
     return entry
 
@@ -189,17 +235,19 @@ def compile_pdf(p):
     missing = missing_image_assets(tex,doc)
     if missing:
         return {'ok':False,'message':'Missing required image assets: '+', '.join(missing), 'missing_assets':missing}
-    compiler = shutil.which('pdflatex')
+    compiler = pdflatex_path()
     if not compiler:
-        return {'ok':False,'message':'pdflatex is not installed. Install BasicTeX or MacTeX on your Mac.'}
+        return {'ok':False,'message':cfgmod.latex_install_hint()}
     env = os.environ.copy()
     env['openout_any'] = 'p'
+    env['PATH'] = str(Path(compiler).parent) + os.pathsep + env.get('PATH', '')
+    timeout = CONFIG['server']['compile_timeout']
     try:
         result = subprocess.run([compiler,'-no-shell-escape','-interaction=nonstopmode','-halt-on-error','-file-line-error','main.tex'],
-                                cwd=str(doc), text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                timeout=35, env=env)
+                                cwd=str(doc), text=True, errors='replace', stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                timeout=timeout, env=env)
     except subprocess.TimeoutExpired:
-        return {'ok':False,'message':'LaTeX compilation exceeded 35 seconds'}
+        return {'ok':False,'message':'LaTeX compilation exceeded '+str(timeout)+' seconds (raise server.compile_timeout in config.json if packages are still installing)'}
     except OSError as e:
         return {'ok':False,'message':str(e)}
     if result.returncode != 0 or not (doc/'main.pdf').exists():
@@ -259,7 +307,9 @@ def create_prompt(p):
     kind = kind_dir(p['kind'])
     doc = folder_for(entry['id'])/kind
     tex = (doc/'main.tex').read_text(encoding='utf-8') if (doc/'main.tex').exists() else ''
-    policy = (PROMPTS / ('cv-prompt.md' if kind=='cv' else 'cover-letter-prompt.md')).read_text(encoding='utf-8')
+    prompt_file = PROMPTS / ('cv-prompt.md' if kind=='cv' else 'cover-letter-prompt.md')
+    policy = prompt_file.read_text(encoding='utf-8') if prompt_file.is_file() else ''
+    policy = policy.replace('[Data Science]', '[' + (CONFIG['profile'].get('target_field') or 'the target field') + ']')
     preamble = '''JOB APPLY HANDOFF — DOCUMENT CONTENT ONLY\nYou are editing an existing LaTeX document for a specific vacancy. Preserve template commands and facts.\nThis prompt is being copied manually from a local browser app; you cannot access or write to the local app directly.\nIf the supplied policy asks for missing information, ask before making those changes.\nReturn a complete main.tex source block. This is a draft; the user will review and compile it locally.\n\n'''
     return {'prompt':preamble+'INSTRUCTIONS:\n'+policy+'\n\nJOB DETAILS:\nCompany: '+entry['company']+'\nJob title: '+entry['job_title']+'\nRole type: '+entry['role_type']+'\nWeekly availability: '+entry['availability']+'\nStart date: '+entry['start_date']+'\nURL: '+entry['job_url']+'\n\nJOB DESCRIPTION:\n'+entry['job_description']+'\n\nCURRENT main.tex:\n```latex\n'+tex+'\n```'}
 
@@ -307,8 +357,40 @@ def import_templates(p):
             'ready':template_source(kind) is not None}
 
 
+def public_config():
+    cfg = CONFIG
+    return {'profile': dict(cfg['profile']), 'defaults': dict(cfg['defaults']),
+            'server': dict(cfg['server']), 'configured': cfgmod.is_configured(cfg)}
+
+
+def save_profile(p):
+    """Persist profile/defaults/server settings from the UI and reload them."""
+    current = cfgmod.load_config()
+    for section in ('profile', 'defaults', 'server'):
+        incoming = p.get(section)
+        if isinstance(incoming, dict):
+            for key in current[section]:
+                if key in incoming:
+                    current[section][key] = incoming[key]
+    cfgmod.save_config(current)
+    reload_config()
+    return public_config()
+
+
+def health():
+    cv_main = TEMPLATES/'cv'/'main.tex'
+    return {'ok':True,'version':VERSION,'platform':sys.platform,
+            'engine':'pdflatex' if pdflatex_path() else 'missing','pdflatex':pdflatex_path() or '',
+            'install_hint':'' if pdflatex_path() else cfgmod.latex_install_hint(),
+            'cv_template':cv_main.exists(),
+            'cv_missing_assets':missing_image_assets(cv_main.read_text(encoding='utf-8'),TEMPLATES/'cv') if cv_main.exists() else [],
+            'cover_template':template_source('cover-letter') is not None,
+            'configured':cfgmod.is_configured(CONFIG),'profile_name':CONFIG['profile']['full_name'],
+            'google_sheets':'not_connected', 'ai':'manual_chatgpt_handoff'}
+
+
 class Handler(BaseHTTPRequestHandler):
-    server_version = 'JobApply/0.1'
+    server_version = 'JobApply/' + VERSION
 
     def log_message(self, fmt, *args):
         if not self.path.startswith('/api/'):
@@ -356,11 +438,9 @@ class Handler(BaseHTTPRequestHandler):
                 typ = 'application/javascript; charset=utf-8' if path.endswith('.js') else 'text/css; charset=utf-8'
                 return self.raw((PUBLIC/path[1:]).read_bytes(),typ)
             if path == '/api/health':
-                return self.json({'ok':True,'engine':'pdflatex' if shutil.which('pdflatex') else 'missing',
-                                  'cv_template':(TEMPLATES/'cv'/'main.tex').exists(),
-                                  'cv_missing_assets':missing_image_assets((TEMPLATES/'cv'/'main.tex').read_text(encoding='utf-8'),TEMPLATES/'cv') if (TEMPLATES/'cv'/'main.tex').exists() else [],
-                                  'cover_template':template_source('cover-letter') is not None,
-                                  'google_sheets':'not_connected', 'ai':'manual_chatgpt_handoff'})
+                return self.json(health())
+            if path == '/api/profile':
+                return self.json({'ok':True,'item':public_config()})
             if path == '/api/applications': return self.json({'ok':True,'items':all_apps()})
             if path == '/api/application': return self.json({'ok':True,'item':read_manifest(self._single(q,'id'))})
             if path == '/api/document':
@@ -370,10 +450,10 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/diff':
                 kind = kind_dir(self._single(q,'kind'))
                 app_id = self._single(q,'id')
-                old = template_source(kind)
+                old = master_source_text(kind)
                 new = folder_for(app_id)/kind/'main.tex'
                 if old is None or not new.is_file(): raise FileNotFoundError('Original and edited LaTeX must both exist')
-                diff = difflib.unified_diff(old.read_text(encoding='utf-8').splitlines(), new.read_text(encoding='utf-8').splitlines(),
+                diff = difflib.unified_diff(old.splitlines(), new.read_text(encoding='utf-8').splitlines(),
                                            fromfile='Original master template',tofile='This application',lineterm='')
                 return self.json({'ok':True,'diff':'\n'.join(diff) or 'No changes from the original master template.'})
             if path == '/api/prompt-settings':
@@ -410,7 +490,8 @@ class Handler(BaseHTTPRequestHandler):
             path = urlparse(self.path).path
             routes = {'/api/create':create_application,'/api/save-document':save_source,'/api/compile':compile_pdf,
                       '/api/approve':approve,'/api/prepare':prepare,'/api/apply':apply,
-                      '/api/edit':update_metadata,'/api/generate-prompt':create_prompt,'/api/upload-template':import_templates}
+                      '/api/edit':update_metadata,'/api/generate-prompt':create_prompt,'/api/upload-template':import_templates,
+                      '/api/profile':save_profile}
             if path == '/api/save-prompt':
                 kind = kind_dir(p['kind'])
                 prompt = p.get('prompt','')
@@ -424,20 +505,29 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e: self.error('Server error: '+str(e),500)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--no-browser',action='store_true')
-    parser.add_argument('--port',type=int,default=8765)
-    args = parser.parse_args()
+def main(argv=None):
+    parser = argparse.ArgumentParser(description='Job Apply local server')
+    parser.add_argument('--no-browser',action='store_true',help='do not open the browser automatically')
+    parser.add_argument('--port',type=int,default=None,help='override server.port from config.json')
+    args = parser.parse_args(argv)
     global PORT
-    PORT = args.port
+    reload_config()
+    PORT = args.port or CONFIG['server']['port']
     APPLICATIONS.mkdir(parents=True,exist_ok=True)
     TRACKER.parent.mkdir(parents=True,exist_ok=True)
     update_tracker()
-    server = ThreadingHTTPServer(('127.0.0.1',PORT),Handler)
+    try:
+        server = ThreadingHTTPServer(('127.0.0.1',PORT),Handler)
+    except OSError as e:
+        print('Could not bind to port '+str(PORT)+': '+str(e)+'\nClose the other Job Apply window or run: python app/server.py --port '+str(PORT+1),file=sys.stderr)
+        sys.exit(1)
     url = 'http://127.0.0.1:'+str(PORT)
-    print('Job Apply is running locally at '+url+' (Ctrl+C to stop)',flush=True)
-    if not args.no_browser:
+    print('Job Apply '+VERSION+' is running locally at '+url+' (Ctrl+C to stop)',flush=True)
+    if not cfgmod.is_configured(CONFIG):
+        print('Profile not set up yet: run "python setup.py" or open the Profile page in the browser.',flush=True)
+    if not pdflatex_path():
+        print('Warning: '+cfgmod.latex_install_hint(),flush=True)
+    if not args.no_browser and CONFIG['server']['open_browser']:
         threading.Timer(0.6,lambda:webbrowser.open(url)).start()
     try:
         server.serve_forever()

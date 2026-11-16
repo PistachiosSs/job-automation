@@ -1,0 +1,26 @@
+{
+  "profile": {
+    "full_name": "Sample Candidate",
+    "headline": "Master's Student in Informatics",
+    "email": "sample@example.com",
+    "phone": "+49 000 0000000",
+    "location": "City, Country",
+    "linkedin": "https://www.linkedin.com/in/your-handle",
+    "github": "https://github.com/your-handle",
+    "portfolio": "",
+    "photo": "",
+    "target_field": "Software Development"
+  },
+  "defaults": {
+    "role_type": "Werkstudent",
+    "category": "Software Developer",
+    "availability": "20 hours/week",
+    "start_date": "Immediately"
+  },
+  "server": {
+    "port": 8765,
+    "open_browser": true,
+    "pdflatex": "",
+    "compile_timeout": 120
+  }
+}

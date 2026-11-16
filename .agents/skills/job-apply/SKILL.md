@@ -9,9 +9,10 @@ This skill specification belongs to the local Desktop project. It does **not** a
 
 ## Local application
 
-- User launches `start.command` from `~/Desktop/Job-Apply`.
-- Interface is `http://127.0.0.1:8765` when the local server is running.
-- All document artifacts, prompts, manifests, and CSV exports live under that Desktop folder.
+- User launches `start.bat` (Windows), `start.command` (macOS) or `start.sh` from the project folder.
+- Interface is `http://127.0.0.1:8765` (or the port in `config.json`) when the local server is running.
+- All document artifacts, prompts, manifests, and CSV exports live under that project folder.
+- Personal details come from `config.json`; the app stamps them into each application copy.
 
 ## Before tailoring
 

@@ -17,9 +17,38 @@ function showPage(page){
   state.page=page;
   document.querySelectorAll('.page').forEach(el=>el.classList.toggle('active',el.id==='page-'+page));
   document.querySelectorAll('.nav[data-section]').forEach(el=>el.classList.toggle('active',el.dataset.section===page));
-  $('active-location').textContent = ({new:'New application',documents:'Document studio',tracker:'Application tracker',templates:'Templates & prompts'})[page];
+  $('active-location').textContent = ({new:'New application',documents:'Document studio',tracker:'Application tracker',templates:'Templates & prompts',profile:'Profile & settings'})[page];
   if (page==='tracker') renderTracker();
   if (page==='templates'){refreshHealth();loadPromptSettings();}
+  if (page==='profile') act(loadProfile);
+}
+const profileFields={profile:['full_name','headline','email','phone','location','linkedin','github','portfolio','photo','target_field'],defaults:['role_type','category','availability','start_date'],server:['port','pdflatex','compile_timeout']};
+const profilePrefix={profile:'p-',defaults:'d-',server:'s-'};
+async function loadProfile(){
+  const r=await api('/api/profile');
+  state.config=r.item;
+  for(const [section,keys] of Object.entries(profileFields))for(const k of keys)$(profilePrefix[section]+k).value=r.item[section][k]??'';
+  $('s-open_browser').checked=Boolean(r.item.server.open_browser);
+  $('profile-hint').textContent=r.item.configured?'Profile saved in config.json. New applications use these values.':'Replace the sample name and email so your documents show your details.';
+}
+function collectProfile(){
+  const out={};
+  for(const [section,keys] of Object.entries(profileFields)){out[section]={};for(const k of keys)out[section][k]=$(profilePrefix[section]+k).value.trim();}
+  out.server.open_browser=$('s-open_browser').checked;
+  return out;
+}
+async function saveProfile(event){
+  event.preventDefault();
+  const r=await api('/api/profile',collectProfile());
+  state.config=r;
+  applyDefaults();
+  await refreshHealth();
+  toast('Profile saved. New applications will use it; existing copies are unchanged.');
+  $('profile-hint').textContent=r.configured?'Profile saved in config.json. New applications use these values.':'Replace the sample name and email so your documents show your details.';
+}
+function applyDefaults(){
+  const d=state.config&&state.config.defaults;if(!d)return;
+  for(const [k,id] of [['role_type','role-type'],['category','category'],['availability','availability'],['start_date','start-date']]){const el=$(id);if(el&&!el.dataset.touched&&d[k])el.value=d[k];}
 }
 function statusText(s){return statuses[s] || s || 'Not requested'}
 function shortDate(iso){return iso ? iso.slice(0,10) : '—'}
@@ -31,11 +60,16 @@ async function refreshHealth(){
   $('cv-hint').textContent=h.cv_missing_assets.length ? 'Missing required asset(s): '+h.cv_missing_assets.join(', ') : 'CV source and referenced image assets found';
   $('cover-hint').textContent=h.cover_template?'Cover letter LaTeX source is available':'Upload the cover letter LaTeX project to enable this option';
   const warnings=[];
-  if(h.engine!=='pdflatex')warnings.push('PDF compiler not detected: install MacTeX or BasicTeX.');
+  if(h.engine!=='pdflatex')warnings.push(h.install_hint||'PDF compiler not detected.');
+  if(!h.configured)warnings.push('Profile not set up: open Profile & settings and enter your name and contact details.');
   if(h.cv_missing_assets.length)warnings.push('CV requires missing asset: '+h.cv_missing_assets.join(', ')+'.');
   if(!h.cover_template)warnings.push('Cover letter template has not been added.');
   $('setup-alert').style.display=warnings.length?'block':'none';
   $('setup-alert').textContent=warnings.length?'Setup notice: '+warnings.join(' ') : '';
+  $('latex-dot').className='dot '+(h.engine==='pdflatex'?'green':'amber');
+  $('latex-status').textContent=h.engine==='pdflatex'?'pdflatex ready':'Not installed';
+  $('latex-notice').style.display=h.engine==='pdflatex'?'none':'block';
+  $('latex-notice').textContent=h.install_hint||'';
   return h;
 }
 async function refreshApps(){
@@ -162,6 +196,9 @@ async function createApp(event){
     const item=await api('/api/create',p);
     state.app=item;
     state.kind=p.include_cv?'cv':'cover-letter';
+    $('new-form').reset();
+    for(const id of ['role-type','category','availability','start-date'])delete $(id).dataset.touched;
+    applyDefaults();
     await refreshApps();
     showPage('documents');
     await loadApp(item.id);
@@ -202,6 +239,8 @@ async function act(fn){try{await fn()}catch(e){toast(e.message,true)}}
 function init(){
   document.querySelectorAll('[data-section]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.section)));
   $('new-form').addEventListener('submit',createApp);
+  $('profile-form').addEventListener('submit',e=>act(()=>saveProfile(e)));
+  for(const id of ['role-type','category','availability','start-date'])$(id).addEventListener('input',()=>{$(id).dataset.touched='1'});
   $('app-selector').addEventListener('change',e=>act(()=>loadApp(e.target.value)));
   document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',async()=>{
     if(state.dirty&&!confirm('The current LaTeX source has unsaved changes. Switch documents without saving?'))return;
@@ -237,4 +276,4 @@ function init(){
   window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
 }
 init();
-(async()=>{try{await refreshHealth();await refreshApps()}catch(e){toast('Could not connect to local server: '+e.message,true)}})();
+(async()=>{try{const h=await refreshHealth();await refreshApps();state.config=(await api('/api/profile')).item;applyDefaults();if(!h.configured&&!state.apps.length)showPage('profile');}catch(e){toast('Could not connect to local server: '+e.message,true)}})();

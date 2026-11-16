@@ -11,11 +11,13 @@
     <button type="button" class="nav" data-section="documents"><span class="nav-ico">▤</span> Document studio</button>
     <button type="button" class="nav" data-section="tracker"><span class="nav-ico">▦</span> Application tracker</button>
     <div class="side-label second">CONFIGURATION</div>
+    <button type="button" class="nav" data-section="profile"><span class="nav-ico">☺</span> Profile & settings</button>
     <button type="button" class="nav" data-section="templates"><span class="nav-ico">⌁</span> Templates & prompts</button>
     <div class="side-spacer"></div>
-    <div class="integration"><span class="dot amber"></span><div><strong>ChatGPT handoff</strong><span>Manual copy / paste (v0.1)</span></div></div>
+    <div class="integration"><span class="dot amber"></span><div><strong>ChatGPT handoff</strong><span>Manual copy / paste</span></div></div>
     <div class="integration"><span class="dot amber"></span><div><strong>Google Sheets</strong><span>CSV export available</span></div></div>
-    <div class="side-foot">Local macOS edition • v0.1</div>
+    <div class="integration"><span class="dot" id="latex-dot"></span><div><strong>LaTeX compiler</strong><span id="latex-status">Checking…</span></div></div>
+    <div class="side-foot">Local edition • v0.2</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="breadcrumb">WORKSPACE <span>/</span> <span id="active-location">New application</span></div><div class="topright"><span class="running"><i></i> Local & private</span><a class="chatgpt-link" target="_blank" rel="noopener noreferrer" href="https://chatgpt.com/">Open ChatGPT ↗</a></div></header>
@@ -83,6 +85,49 @@
         <div class="table-wrapper"><table><thead><tr><th>Company</th><th>Job title</th><th>Category</th><th>Created</th><th>Status</th><th>Action</th></tr></thead><tbody id="tracker-rows"><tr><td colspan="6" class="muted">No applications yet.</td></tr></tbody></table></div>
         <div class="tracker-note">Google Sheets is <strong>not connected</strong> in this build. The CSV is the source for initial sheet creation; remote synchronization will be added only after authorization.</div>
       </section>
+      <section class="page" id="page-profile">
+        <div class="eyebrow">SETUP / PROFILE</div><h1>Your details, once.</h1>
+        <p class="subheading">Saved to <code>config.json</code> on this computer and stamped into every new application copy. The master templates in <code>templates/</code> are never modified.</p>
+        <form id="profile-form" class="form-card">
+          <div class="section-label"><span>PERSONAL FIELDS</span><span>Used in CV and cover letter headers</span></div>
+          <div class="row2">
+            <div><label for="p-full_name">Full name <span class="req">*</span></label><input id="p-full_name" name="full_name" required /></div>
+            <div><label for="p-headline">Headline under your name</label><input id="p-headline" name="headline" placeholder="e.g. M.Sc. Student in Computer Science" /></div>
+          </div>
+          <div class="row3">
+            <div><label for="p-email">Email <span class="req">*</span></label><input id="p-email" name="email" type="email" required /></div>
+            <div><label for="p-phone">Phone</label><input id="p-phone" name="phone" placeholder="+49 ..." /></div>
+            <div><label for="p-location">Location</label><input id="p-location" name="location" placeholder="City, Country" /></div>
+          </div>
+          <div class="row3">
+            <div><label for="p-linkedin">LinkedIn URL</label><input id="p-linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/..." /></div>
+            <div><label for="p-github">GitHub URL</label><input id="p-github" name="github" placeholder="https://github.com/..." /></div>
+            <div><label for="p-portfolio">Portfolio URL</label><input id="p-portfolio" name="portfolio" placeholder="https://..." /></div>
+          </div>
+          <div class="row2">
+            <div><label for="p-photo">CV photo path (JPEG)</label><input id="p-photo" name="photo" placeholder="C:\Users\you\Pictures\cv.jpg — empty keeps the placeholder" /></div>
+            <div><label for="p-target_field">Field you apply in</label><input id="p-target_field" name="target_field" placeholder="e.g. Data Science, XR Development" /></div>
+          </div>
+          <div class="section-label"><span>DEFAULTS FOR NEW APPLICATIONS</span><span>Pre-filled, editable per application</span></div>
+          <div class="row2">
+            <div><label for="d-role_type">Application type</label><select id="d-role_type" name="role_type"><option value="Werkstudent">Werkstudent</option><option value="Praktikum">Praktikum</option><option value="Thesis">Thesis</option><option value="Full-time">Full-time</option><option value="Other">Other</option></select></div>
+            <div><label for="d-category">Position category</label><select id="d-category" name="category"><option>Data Science</option><option>Data Analyst</option><option>Business Intelligence</option><option>Machine Learning</option><option>Unity Developer</option><option>AR/VR Developer</option><option>3D Artist</option><option>Software Developer</option><option>Other</option></select></div>
+          </div>
+          <div class="row2">
+            <div><label for="d-availability">Weekly availability</label><input id="d-availability" name="availability" placeholder="e.g. 20 hours/week" /></div>
+            <div><label for="d-start_date">Start date</label><input id="d-start_date" name="start_date" placeholder="e.g. Immediately" /></div>
+          </div>
+          <div class="section-label"><span>SERVER</span><span>Takes effect after restart</span></div>
+          <div class="row3">
+            <div><label for="s-port">Port</label><input id="s-port" name="port" type="number" min="1024" max="65535" /></div>
+            <div><label for="s-pdflatex">pdflatex path (optional)</label><input id="s-pdflatex" name="pdflatex" placeholder="auto-detected when empty" /></div>
+            <div><label for="s-compile_timeout">Compile timeout (s)</label><input id="s-compile_timeout" name="compile_timeout" type="number" min="10" /></div>
+          </div>
+          <label class="choice" style="max-width:360px"><input type="checkbox" id="s-open_browser" name="open_browser"/><span>Open browser on start<small>Launches http://127.0.0.1:&lt;port&gt; automatically</small></span></label>
+          <div class="form-actions"><div class="hint" id="profile-hint">Nothing here leaves this computer unless you copy a prompt into ChatGPT.</div><button type="submit" class="primary">Save profile</button></div>
+        </form>
+        <div class="notice" id="latex-notice" style="display:none"></div>
+      </section>
       <section class="page" id="page-templates">
         <div class="eyebrow">SETUP / CONTROL</div><h1>Your templates, your style.</h1>
         <p class="subheading">Keep master assets unchanged. Each job gets its own independent working copy.</p>
@@ -90,8 +135,8 @@
           <div class="template-card"><div class="card-head"><div><strong>Master CV template</strong><p>LaTeX source + all dependencies</p></div><span id="cv-health" class="status-pill">Checking…</span></div><input type="file" id="cv-files" multiple accept=".tex,.sty,.cls,.jpg,.jpeg,.png,.pdf,.zip"/><button type="button" class="secondary upload" id="upload-cv">Import CV file(s)</button><div class="card-hint" id="cv-hint">Provided: main.tex and cv-format.sty</div></div>
           <div class="template-card"><div class="card-head"><div><strong>Cover letter template</strong><p>Export original LaTeX project as ZIP</p></div><span id="cover-health" class="status-pill">Checking…</span></div><input type="file" id="cover-files" multiple accept=".tex,.sty,.cls,.jpg,.jpeg,.png,.pdf,.zip"/><button type="button" class="secondary upload" id="upload-cover">Import cover letter file(s)</button><div class="card-hint" id="cover-hint">Pending: cover letter LaTeX source</div></div>
         </div>
-        <div class="prompt-card"><div class="card-head"><div><strong>Tailoring instructions</strong><p>Saved separately for each document type.</p></div><select id="prompt-kind"><option value="cv">CV prompt</option><option value="cover-letter">Cover letter prompt</option></select></div><textarea id="prompt-editor" class="prompt-input" spellcheck="false"></textarea><div class="form-actions"><span class="hint">Prompts are stored locally on your Mac.</span><button type="button" class="primary" id="save-prompt">Save prompt</button></div></div>
-        <div class="notice">Important: the uploaded CV contains the name <strong>Sample Candidate</strong>. Verify that this is the correct master template before generating a real application. The original also references <code>photo.jpg</code>, which is not yet present.</div>
+        <div class="prompt-card"><div class="card-head"><div><strong>Tailoring instructions</strong><p>Saved separately for each document type.</p></div><select id="prompt-kind"><option value="cv">CV prompt</option><option value="cover-letter">Cover letter prompt</option></select></div><textarea id="prompt-editor" class="prompt-input" spellcheck="false"></textarea><div class="form-actions"><span class="hint">Prompts are stored locally on this computer.</span><button type="button" class="primary" id="save-prompt">Save prompt</button></div></div>
+        <div class="notice" id="template-notice">The bundled CV is a demonstration template. Its header (name, contact, links) is filled from your <strong>Profile</strong>; the experience, education and skills sections are sample content — replace them with your own or import your own LaTeX CV above.</div>
       </section>
     </div>
   </main>

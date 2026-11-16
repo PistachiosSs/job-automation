@@ -7,6 +7,21 @@
 \documentclass[10.5pt,a4paper]{article}
 \usepackage{cv-format}
 
+% ---- PERSONAL FIELDS --------------------------------------------------------
+% Job Apply fills these from config.json (Profile page) when it creates each
+% application copy. Keep the macro names; edit the values here only if you do
+% not use the profile feature. Leave a URL empty to show a plain label.
+\newcommand{\ApplicantName}{Sample Candidate}
+\newcommand{\ApplicantHeadline}{Master's Student in Informatics}
+\newcommand{\ApplicantEmail}{sample@example.com}
+\newcommand{\ApplicantPhone}{+49 000 0000000}
+\newcommand{\ApplicantLocation}{City, Country}
+\newcommand{\ApplicantLinkedIn}{}
+\newcommand{\ApplicantGitHub}{}
+\newcommand{\ApplicantPortfolio}{}
+% \applink{url}{label}: linked label when url is set, plain label otherwise.
+\newcommand{\applink}[2]{\ifx\relax#1\relax #2\else\href{#1}{#2}\fi}
+% -----------------------------------------------------------------------------
 
 \begin{document}
 
@@ -15,19 +30,18 @@
 % ==============================================================
 \noindent
 \begin{minipage}[c]{0.74\textwidth}
-  {\fontsize{26}{28}\selectfont\textbf{Sample Candidate}}\\[4pt]
-  {\Large\textit{\color{subtext}Master's Student in Informatics}}\\[8pt]
-  \iconcircle{\Letter}{0.9}\,\, \small sample@example.com
+  {\fontsize{26}{28}\selectfont\textbf{\ApplicantName}}\\[4pt]
+  {\Large\textit{\color{subtext}\ApplicantHeadline}}\\[8pt]
+  \iconcircle{\Letter}{0.9}\,\, \small \href{mailto:\ApplicantEmail}{\ApplicantEmail}
   \hspace{14pt}
-  \iconcircle{\Telefon}{0.9}\,\, \small [PHONE]
+  \iconcircle{\Telefon}{0.9}\,\, \small \ApplicantPhone
   \hspace{14pt}
-  \pinicon\,\, \small Bamberg, Bavaria\\[6pt]
-  % Profile URLs were not supplied; labels are intentionally unlinked.
-  \iconbadge{\footnotesize\textbf{in}}{0.9}\,\, \small LinkedIn
+  \pinicon\,\, \small \ApplicantLocation\\[6pt]
+  \iconbadge{\footnotesize\textbf{in}}{0.9}\,\, \small \applink{\ApplicantLinkedIn}{LinkedIn}
   \hspace{10pt}
-  \iconbadge{\footnotesize\textbf{gh}}{0.9}\,\, \small GitHub
+  \iconbadge{\footnotesize\textbf{gh}}{0.9}\,\, \small \applink{\ApplicantGitHub}{GitHub}
   \hspace{10pt}
-  \iconbadge{\footnotesize\textbf{Be}}{0.9}\,\, \small Behance
+  \iconbadge{\footnotesize\textbf{Be}}{0.9}\,\, \small \applink{\ApplicantPortfolio}{Portfolio}
 \end{minipage}%
 \hfill
 \begin{minipage}[c]{0.22\textwidth}

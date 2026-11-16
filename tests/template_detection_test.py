@@ -23,7 +23,8 @@ class TemplateDetectionTests(unittest.TestCase):
             server, TEMPLATES=self.work / 'templates',
             APPLICATIONS=self.work / 'applications',
             TRACKER=self.work / 'tracker' / 'applications.csv',
-            PROMPTS=self.work / 'prompts')
+            PROMPTS=self.work / 'prompts',
+            CONFIG=server.cfgmod.load_config(self.work / 'none.json'))
         self.patch.start()
         self.addCleanup(self.patch.stop)
         self.cover = server.TEMPLATES / 'cover-letter'
